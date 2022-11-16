@@ -206,6 +206,8 @@ def handle_exit(signal_received, frame):
 
 
 def rebuild_single_apk(arg_source_apk_full_path, arg_output_apk_full_path):
+    print(arg_source_apk_full_path)
+    print(arg_output_apk_full_path)
     # path of the directory, where .apk file will be decompiled
     decompiled_path = Path(str(arg_source_apk_full_path) + decomp_dir_suffix).resolve()
     global garbage
@@ -220,7 +222,7 @@ def rebuild_single_apk(arg_source_apk_full_path, arg_output_apk_full_path):
     # decompiling .apk file with apktool
     log_info(f'Processing {colors.WARNING}{Path(arg_source_apk_full_path).name}')
     log_info('Decompiling the .apk file')
-    command = ['java', '-jar', tools.apktool_path, 'decode', arg_source_apk_full_path, '--output', decompiled_path]
+    command = ['java', '-jar', str(tools.apktool_path), 'decode', str(arg_source_apk_full_path), '--output', str(decompiled_path)]
     for param in [args.no_src, args.only_main_classes]:
         if param:
             command.append(param)
@@ -308,13 +310,13 @@ def rebuild_single_apk(arg_source_apk_full_path, arg_output_apk_full_path):
 
     # building a new .apk file with apktool
     log_info('Building a new .apk file')
-    command = ['java', '-jar', tools.apktool_path, 'build', decompiled_path, '--use-aapt2', '--output', arg_output_apk_full_path]
+    command = ['java', '-jar', str(tools.apktool_path), 'build', str(decompiled_path), '--use-aapt2', '--output', str(arg_output_apk_full_path)]
     subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
     garbage['files'].append(arg_output_apk_full_path)
 
     # sign the new .apk file with uber-apk-signer
     log_info('Signing the new .apk file')
-    command = ['java', '-jar', tools.uber_apk_signer_path, '--apks', arg_output_apk_full_path, '--allowResign', '--overwrite']
+    command = ['java', '-jar', str(tools.uber_apk_signer_path), '--apks', str(arg_output_apk_full_path), '--allowResign', '--overwrite']
     if args.ks:
         command.extend(['--ks', args.ks, '--ksPass', args.ks_pass, '--ksAlias', args.ks_alias, '--ksKeyPass', args.ks_alias_pass])
     subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
@@ -396,7 +398,7 @@ def main():
         log_info(f'Extracting .apks from {colors.WARNING}{source_file.full_path}')
         apks_full_path = source_file.full_path.with_suffix('.apks')
         garbage['files'].append(apks_full_path)
-        command = ['java', '-jar', tools.bundletool_path, 'build-apks', '--bundle=' + str(source_file.full_path), '--output=' + str(apks_full_path), '--mode=universal']
+        command = ['java', '-jar', str(tools.bundletool_path), 'build-apks', '--bundle=' + str(source_file.full_path), '--output=' + str(apks_full_path), '--mode=universal']
         # execute bundletool
         subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
 
@@ -463,7 +465,7 @@ def main():
                 subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
             else:
                 log_info(f'Installing the rebuilded .apk file {colors.WARNING}{output_files.full_path}')
-                command = ['adb', 'install', output_files.full_path]
+                command = ['adb', 'install', str(output_files.full_path)]
                 subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
         else:
             log_err("adb not found, unable to execute the 'adb install' command")
